@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var load = require('express-load');
+var helmet = require('helmet');
 
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
@@ -34,13 +35,22 @@ module.exports = function() {
     app.use(passport.initialize());
     app.use(passport.session());
 
-
+    app.use(helmet());
+    app.use(helmet.xframe());
+    app.use(helmet.xssFilter());
+    app.use(helmet.nosniff());
+    app.disable('x-powered-by');
+    
     //Carregar pastas
     load('models', { cwd: 'app' })
         .then('controllers')
         .then('routes/auth.js')
         .then('routes')
         .into(app);
+
+    app.get('*', function(req, res) {
+         res.status(404).render('404');
+        });
 
     return app;
 };

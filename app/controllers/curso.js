@@ -1,6 +1,7 @@
 module.exports = function(app) {
     var Curso = app.models.curso;
     var controller = {};
+    var sanitize = require('mongo-sanitize');
 
     controller.listaCursos = function(req, res) {
         Curso.find().exec().then(
@@ -27,8 +28,8 @@ module.exports = function(app) {
     };
 
     controller.removeCurso = function(req, res) {
-        var _id = req.params.id;
-        Curso.deleteOne({ "_id": _id }).exec().then(
+        var _id = sanitize(req.params.id);
+        Curso.remove({"_id" : _id}).exec().then(
             function() {
                 res.end();
             },
@@ -39,8 +40,15 @@ module.exports = function(app) {
 
     controller.salvaCurso = function(req, res) {
         var _id = req.body._id;
+
+        var dados = {
+            "curso" : req.body.nome,
+            "coordenador" : req.body.email,
+            "emergencia" : req.body.emergencia || null
+            };
+
         if (_id) {
-            Curso.findByIdAndUpdate(_id, req.body).exec().then(
+            Curso.findByIdAndUpdate(_id, dados).exec().then(
                 function(curso) {
                     res.json(curso);
                 },
@@ -49,7 +57,7 @@ module.exports = function(app) {
                     res.status(500).json(erro);
                 });
         } else {
-            Curso.create(req.body).then(
+            Curso.create(dados).then(
                 function(curso) {
                     res.status(201).json(curso);
                 },
